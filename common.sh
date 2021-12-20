@@ -23,6 +23,7 @@
 # Modifications 2017-2018: Nina Rinskaya (Azul Systems), Ivan Popov (Azul Systems)
 #----------------------------------------------------------
 
+[ -z "${JAVA_HOME}" ] && echo "Error: JAVA_HOME not set" && exit 1
 
 export REFERENCE_JAVA_HOME="${REFERENCE_JAVA_HOME:-"${JAVA_HOME}"}"
 
