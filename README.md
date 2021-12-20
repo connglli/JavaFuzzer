@@ -1,4 +1,4 @@
-#Java* Fuzzer test generator
+# Java* Fuzzer test generator
 
 Java* Fuzzer test generator is a random Java tests generator. It is derived from Java* Fuzzer for Android* (https://github.com/android-art-intel/Fuzzer), adapted for desktop/server Java environment on Linux and extended to cover more Java syntax features (class inheritance, complex loop patterns, improved exception throwing patterns, etc). The tool compares the result of execution in JIT mode with interpreter mode or reference Java VM that allows to detect crashes, hangs and incorrect calculations. The main idea of the tool is to generate hundreds of thousands small random tests and to cover various cases using pre-defined test generator heuristics and provide a strong testing for Java VM compiler and runtime.
 
@@ -22,8 +22,8 @@ Prepare environment:
   - Reference JDK version 6 or higher
   - Ruby version 1.8.7 or higher
 - Set environment variables in common.sh script or through environment variables export:
-  - REFERENCE_JAVA_HOME should point to the reference JDK location
-  - JAVA_UNDER_TEST should point to the java binary to be tested (\<JDK under test location\>/bin/java)
+  - REFERENCE_JAVA_HOME should point to the reference JDK location (default: the installed JDK location)
+  - JAVA_UNDER_TEST should point to the java binary to be tested (\<JDK under test location\>/bin/java, default: the installed java binary)
   - Make sure ruby binary can be found in PATH
 - If necessary, set additional environment variables in common.sh script or through environment variables export:
   - (optional, default value 300 seconds if not set) TIME_OUT specifies time in seconds for a test to be killed by timeout
@@ -76,39 +76,42 @@ arrays and calculating check sums
   `bash ./rt.sh -r results -p test -sp -conf config.yml 1000`
 
   This command launches Fuzzer process that generates 1000 tests and runs them on reference and tested java and compares outputs. All tests are stored in the *results* dir in *passes*, *crashes*, *fails*, and *hangs* sub-dirs, test directory name prefix is "test".
-  
+
   Multiple concurrent processes runs:
 
   `bash ./mrt.sh -NP 10 -NT 4000 -P test -R results-1`
-    
+
   This command launches 10 Fuzzer processes, each of them generates 4K tests and runs them on reference and tested java and compares outputs. All the failed tests are stored in the *results-1* dir in crashes, fails, and hangs sub-dirs. 
 
   Another typical commands examples:
 
-  `bash ./mrt.sh -R results-1 -NT 10 -P build1-jdk8- -A -conf config.yml -sp
+  `bash ./mrt.sh -R results-1 -NT 10 -P build1-jdk8- -A -conf config.yml -sp`
 
   This command launches 10 processes, each of them generates unlimited number of tests till the script is killed using configuration file \<Fuzzer tool location\>/rb/config.yml, test directory prefix is set build1-jdk8- (suffix is a combination of process counter and test counter).
 
-  Explanation of arguments used here:
+  **If you only want to generate test and disable differential testing, use `-g` option.**
 
-  mrt.sh args:
+  Explanation of options used here:
 
-  | Arg  | Meaning | 
+  mrt.sh options:
+
+  | Opt  | Meaning | 
   | ---- | ------- |
-  | -R   |  Save the results to the specified directory |
+  | -R   | Save the results to the specified directory |
   | -NT  | Number of tests to generate by each thread  |
-  | -NP  | Number of processes - can be omitted, then rt.sh argument will be used|
+  | -NP  | Number of processes - can be omitted, then rt.sh option will be used|
   | -P   | Prefix for the test names |
   | -A   | Pass the rest arguments to rt.sh script |
 
-  rt.sh args:
+  rt.sh options:
 
-  | Arg                  | Meaning | 
+  | Opt                  | Meaning | 
   | -------------------- | ------- |
-  | -r \<dir\>           |  Save the results to the specified directory |
+  | -r \<dir\>           | Save the results to the specified directory |
   | -p \<prefix string\> | Prefix for the test names |
   | -sp                  | save all tests incuding passed tests (by default only failed tests directories are kept |
   | -conf \<yml file\>   | Specify configuration file located in \<Fuzzer tool location\>/rb/\<yml file\>  |
+  | -g                   | Generates only (don't differential test) |
   | \<number\>           | Number of test to be generated, if set to -1 or not specified then unlimited number of tests is generated and run till the script is killed |
 
 
@@ -123,13 +126,13 @@ MM (Memory management) extension can be enabled by editing config.yml file. This
 
 Example: `bash MM="true" ./mrt.sh -NP 2 -R results_multi_thread -A -conf configMultiThread.yml 10000`
 
-#### Explanation of arguments used here:
+#### Explanation of flags used here:
 
-| Arg                | Meaning |
+| Flag               | Meaning |
 | -------------------| ------  |
 | -R \<dir\>         | Save the results to the specified directory |
 | -NP                | Number of processes |
-| -A                 | Pass the rest arguments to rt.sh script |
+| -A                 | Pass the rest options to rt.sh script |
 | -conf \<yml file\> | Use \<yml file\> for Fuzzer configuration |
 
 
@@ -213,6 +216,9 @@ March 01, 2018:
 - Dmitry Khukhro (Intel Corporation)
 - Andrey Yakovlev (Intel Corporation)
 
-### Authors of 2017-2018 modifications by Azul Systems
+### Authors of 2017-2018 modifications
 - Nina Rinskaya (Azul Systems)
 - Ivan Popov (Azul Systems)
+
+### Authors of 2021- modifications 
+- Cong Li (NJU SPAR and ETHZ AST Labs)

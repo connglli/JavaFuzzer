@@ -29,9 +29,9 @@
 # Run the Fuzzer tool to generate a series of tests; compile each of them with javac,
 # run the test by reference java and java under test and compare results.
 # Parameter:
-#    -r <path>       - directory to put results into
-#    -p <prefix>     - prefix to add to the test dir names
-#    -kd - keep old dirs with failures alive if they exist - don't require removing them
+#    -r <path>    - directory to put results into
+#    -p <prefix>  - prefix to add to the test dir names
+#    -kd          - keep old dirs with failures alive if they exist - don't require removing them
 #    -v <path>    - verify build with existing tests rather than generate new ones,
 #                   if file "config.sh" found in this directory, it is sourcsd to redefine variables,
 #                   such as source_subdir, timeout, limit_core_size
@@ -40,6 +40,7 @@
 #    -arg <arg>   - pass an arbitrary argument to VM
 #    -conf <file> - Pass config file to Fuzzer
 #    -o           - Pass -o option to Fuzzer and control the execution from outside
+#    -g           - Generate only (don't not test)
 #    <integer>    - number of tests to generate
 #--------------------------------------------------------------------------------
 
@@ -87,7 +88,7 @@ function Run_test {
     if [ "$verify" != "y" ]; then
         RunJava ${REF_TIME_OUT} ${JAVA_REFERENCE} ${JAVA_REFERENCE_OPTS} ${test_name} >>rt_out_ref 2>>rt_err_ref
         ref_res_code=$?
-        if  grep 'Killed' rt_out_ref rt_err_ref | grep 'TIME_OUT' &>/dev/null ; then 
+        if  grep 'Killed' rt_out_ref rt_err_ref | grep 'TIME_OUT' &>/dev/null ; then
             Save_res ref_hangs $1 "Reference Java Timeout"
             let ref_timeouts=ref_timeouts+1
            return 6
@@ -95,7 +96,7 @@ function Run_test {
             Save_res ref_failures $1 "Reference StackOverflowError"
             let ref_failures=ref_failures+1
             return 7
-        elif grep 'OutOfMemory' rt_out_ref rt_err_ref &> /dev/null; then 
+        elif grep 'OutOfMemory' rt_out_ref rt_err_ref &> /dev/null; then
             Save_res ref_failures $1 "Reference OutOfMemory"
             let ref_failures=ref_failures+1
             return 7
@@ -108,7 +109,7 @@ function Run_test {
             let ref_crashes=ref_crashes+1
             return 3
         elif [ "$ref_res_code" != "0" ]; then
-            
+
             Save_res ref_failures $1 "Reference Java Failure"
             let ref_failures=ref_failures+1
             return 7
@@ -144,13 +145,13 @@ function Run_test {
         Save_res crashes $1 Crash
         let crashes=crashes+1
     elif [[ "$MM" == "true" &&  "$res_code" == "0" ]] ; then
-        [[ "$SAVE_PASSED" = "true" ]] && Save_passed_res passes $1 
+        [[ "$SAVE_PASSED" = "true" ]] && Save_passed_res passes $1
         let passes=passes+1
-        return 0 # Passed 
+        return 0 # Passed
     elif diff -I "${IGNORE_DEBUG_OUTPUT_PATTERNS}" rt_out_ref rt_out >rt_out.diff 2>&1 && diff -I "${IGNORE_DEBUG_OUTPUT_PATTERNS}" rt_err_ref rt_err >rt_err.diff 2>&1; then
         [[ "$SAVE_PASSED" = "true" ]] && Save_passed_res passes $1
         let passes=passes+1
-        return 0 # Passed 
+        return 0 # Passed
     else
         Save_res fails $1 Failed
         let fails=fails+1
@@ -273,7 +274,7 @@ res_path=$res_dir
 
 if [[ "${res_dir}" = /* ]]; then
     res_path=${res_dir}
-else 
+else
     res_path=`readlink -f ${CURR_DIR}/${res_dir}`
 fi
 
@@ -292,10 +293,10 @@ echo "Results dir: ${res_path}"
 
 [[ -n "${WORK_DIR}" ]] && prefix_="$(cd ${WORK_DIR}; pwd)" || prefix_="${TMPDIR:-/tmp}"
 
-#TODO: 
+#TODO:
 [[ -d /export/ram ]] && prefix_="/export/ram/tmp"
 mkdir -p $prefix_ &> /dev/null
-work_dir=$(mktemp -d -p $prefix_ "fuzzer.tmp.XXXXXXXXXX")
+work_dir=$(mktemp -d "fuzzer.tmp.XXXXXXXXXX")
 
 echo "Working dir: $work_dir"
 cd $work_dir
@@ -363,8 +364,8 @@ fi
 
 if [ $total -lt -1 ]; then
     Finish "invalid number of iterations: $total"
-elif 
-    [ $total -eq -1 ] ; then 
+elif
+    [ $total -eq -1 ] ; then
     echo "NUMBER OF TESTS TO BE GENERATED: UNLIMITED, TILL THE SCRIPT IS KILLED"
 else
     echo "NUMBER OF TESTS TO BE GENERATED: ${total}"
@@ -381,7 +382,7 @@ while [ $iters != $total ]; do
     problem=no
     let iters=iters+1
     let perc=$iters*100/$total
-    if [[ ${total} -gt 0 ]] ; then 
+    if [[ ${total} -gt 0 ]] ; then
         statistics_string="- ${perc}%/$total"
     fi
     rm -f $FILES_OF_INTEREST > /dev/null 2>&1
@@ -401,7 +402,7 @@ while [ $iters != $total ]; do
             Save_res generated ${prefix}${iters} "Test generated"
             echo "$prefix$iters ($lines lines) [$iters valid tests generated, $invalids incorrect tests ${statistics_string}"
            continue
-        fi 
+        fi
         lines=`cat $test_name.java | wc -l`
         cp $RUBY_CODE_DIR/FuzzerUtils*.java .
         ${JAVAC} ${JAVAC_OPTS} $test_name.java
@@ -431,7 +432,7 @@ while [ $iters != $total ]; do
         echo "$prefix$iters ($lines lines) [$passes passed, $crashes crashes, $fails fails, $timeouts hangs, $invalids incorrect tests, $((ref_failures+ref_crashes+ref_timeouts )) Reference Java failures] ${statistics_string}"
 #        let iters=iters-1
     else
-        if [ ${total} -gt 0 ] ; then 
+        if [ ${total} -gt 0 ] ; then
             echo "$prefix$iters ($lines lines) [$passes passed, $crashes crashes, $fails fails, $timeouts hangs, $invalids incorrect tests, $((ref_failures+ref_crashes+ref_timeouts )) Reference Java failures] ${statistics_string}"
         fi
     fi
