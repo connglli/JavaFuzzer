@@ -398,12 +398,12 @@ while [ $iters != $total ]; do
             let iters=iters-1
             continue
         fi
+        lines=`cat $test_name.java | wc -l | xargs`
         if [[ "${generate_only}" == "true" ]] ; then
             Save_res generated ${prefix}${iters} "Test generated"
             echo "$prefix$iters ($lines lines) [$iters valid tests generated, $invalids incorrect tests ${statistics_string}"
            continue
         fi
-        lines=`cat $test_name.java | wc -l`
         cp $RUBY_CODE_DIR/FuzzerUtils*.java .
         ${JAVAC} ${JAVAC_OPTS} $test_name.java
         if [ $? -ne 0 ]; then
